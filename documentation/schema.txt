@@ -27,16 +27,10 @@ Cart {
   totalPrice: number
 }
 
-OrderProduct{
-  product: {Product}, //duplication
-  count: number,
-  totalPrice: number
-}
-
 Order{
-  products: [OrderProduct],
+  products: array, //duplication CartProduct > products, 
   transactionId: string,
-  totalPrice: number,
+  totalPrice: number, // CartProduct > totalPrice
   address: string,
   status: enum["NEW {default}","PROCESSING", "SHIPPED", "DELIVERED"],
   user: {User} //reference

@@ -1,0 +1,43 @@
+User {
+  firstName: string,
+  lastName: string,
+  email: string,
+  password: string,
+  role: enum ["REGULAR","ADMIN"]
+}
+
+Product {
+  name: string,
+  desciption: string,
+  price: number,
+  imageUrl: string
+}
+
+CartProduct {
+  product: {Product}, //reference
+  count: number,
+  totalPrice: number
+}
+
+Cart {
+  products: [
+    CartProduct
+  ],
+  user: {User}, //reference
+  totalPrice: number
+}
+
+OrderProduct{
+  product: {Product}, //duplication
+  count: number,
+  totalPrice: number
+}
+
+Order{
+  products: [OrderProduct],
+  transactionId: string,
+  totalPrice: number,
+  address: string,
+  status: enum["NEW {default}","PROCESSING", "SHIPPED", "DELIVERED"],
+  user: {User} //reference
+}

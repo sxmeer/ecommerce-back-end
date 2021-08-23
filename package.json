@@ -1,0 +1,11 @@
+{
+  "name": "e-commerce_back_end",
+  "version": "1.0.0",
+  "description": "back-end made on nodejs express mongodb (firebase as a storage service)",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Sameer Yadav",
+  "license": "ISC"
+}

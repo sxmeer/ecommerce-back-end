@@ -20,3 +20,12 @@ module.exports.getUserById = (req, res, next) => {
       next(err);
     });
 };
+
+exports.getUser = (req, res, next) => {
+  req.profile.salt = undefined;
+  req.profile.encryptedPassword = undefined;
+  req.profile.createdAt = undefined;
+  req.profile.updatedAt = undefined;
+  req.profile.__v = undefined;
+  res.status(200).json(req.profile);
+}

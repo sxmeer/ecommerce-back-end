@@ -3,8 +3,8 @@ const crypto = require('crypto');
 const { v1: uuidv1 } = require('uuid');
 
 const USER_TYPES = {
-  TYPE_ADMIN="TYPE_ADMIN",
-  TYPE_REGULAR= "TYPE_REGULAR"
+  TYPE_ADMIN: "TYPE_ADMIN",
+  TYPE_REGULAR: "TYPE_REGULAR"
 };
 
 const userSchema = new mongoose.Schema({

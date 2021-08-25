@@ -4,16 +4,16 @@ const formidable = require("formidable");
 const { v1: uuidv1 } = require('uuid');
 const fs = require('fs');
 
-const deleteProductImageFromFirebase = (fileName, operation = "creating") => {
+const deleteProductImageFromFirebase = (fileName) => {
   return storage.ref(process.env.FIREBASE_PRODUCT_IMAGES)
     .child(fileName).delete()
     .then(() => {
-      throw new Error(`Error ${operation} product`);
+      return true;
     })
     .catch((err) => {
-      err.data = { message: `Error ${operation} product` };
-      throw err;
-    })
+      console.log(err);
+      return true;
+    });
 };
 
 exports.getProductById = (req, res, next) => {
@@ -67,10 +67,8 @@ exports.createProduct = (req, res, next) => {
         (error) => { return next(error); },
         () => {
           //complete function
-          storage.ref(process.env.FIREBASE_PRODUCT_IMAGES)
-            .child(newFileName)
-            .getDownloadURL()
-            .then(url => {
+          uploadTask.snapshot.ref.getDownloadURL()
+            .then((url) => {
               let imageObj = { imageUrl: url, imageName: newFileName };
               fields.image = imageObj;
               let product = new Product(fields);
@@ -79,9 +77,10 @@ exports.createProduct = (req, res, next) => {
             .then(productDoc => {
               if (!productDoc) {
                 deleteProductImageFromFirebase(newFileName)
-                  .catch(err => {
-                    err.status = 422;
-                    return next(err)
+                  .then(() => {
+                    let error = new Error("Error creating product");
+                    error.status = 422;
+                    return next(error);
                   });
               } else {
                 productDoc.createdAt = undefined;
@@ -92,8 +91,7 @@ exports.createProduct = (req, res, next) => {
             })
             .catch((err) => {
               deleteProductImageFromFirebase(newFileName)
-                .catch(error => {
-                  err.data = error.data;
+                .then(() => {
                   err.status = 422;
                   return next(err);
                 });
@@ -136,9 +134,7 @@ exports.updateProduct = (req, res, next) => {
         (error) => { return next(error); },
         () => {
           //complete function
-          storage.ref(process.env.FIREBASE_PRODUCT_IMAGES)
-            .child(newFileName)
-            .getDownloadURL()
+          uploadTask.snapshot.ref.getDownloadURL()
             .then(url => {
               let imageObj = { imageUrl: url, imageName: newFileName };
               fields.image = imageObj;
@@ -148,10 +144,11 @@ exports.updateProduct = (req, res, next) => {
             })
             .then(productDoc => {
               if (!productDoc) {
-                deleteProductImageFromFirebase(newFileName, "updating")
-                  .catch(err => {
-                    err.status = 422;
-                    return next(err)
+                deleteProductImageFromFirebase(newFileName)
+                  .then(() => {
+                    let error = new Error("Error udating product");
+                    error.status = 422;
+                    return next(error)
                   });
               } else {
                 productDoc.createdAt = undefined;
@@ -161,9 +158,8 @@ exports.updateProduct = (req, res, next) => {
               }
             })
             .catch((err) => {
-              deleteProductImageFromFirebase(newFileName, "updating")
-                .catch(error => {
-                  err.data = error.data;
+              deleteProductImageFromFirebase(newFileName)
+                .then(() => {
                   err.status = 422;
                   return next(err);
                 });
@@ -189,4 +185,79 @@ exports.updateProduct = (req, res, next) => {
         })
     }
   })
+}
+
+
+exports.getProduct = (req, res, next) => {
+  req.product.createdAt = undefined;
+  req.product.updatedAt = undefined;
+  req.product.__v = undefined;
+  res.status(200).json(req.product);
+}
+
+exports.deleteProduct = (req, res, next) => {
+  let imageName = req.product.image.imageName;
+  deleteProductImageFromFirebase(imageName)
+    .then(() => {
+      return Product.findOneAndDelete({ _id: req.product._id })
+    })
+    .then(() => {
+      return res.status(200).json({
+        message: `The product ${req.product._id} has been deleted`
+      });
+    })
+    .catch((err) => {
+      return next(err);
+    })
+}
+
+exports.getAllProducts = (req, res, next) => {
+  let limit;
+  let page;
+  if (req.query.limit) {
+    let tempLimit = parseInt(req.query.limit);
+    if (!isNaN(tempLimit) && tempLimit > 0) {
+      limit = tempLimit;
+    } else {
+      let error = new Error("Please provide positive integer limit");
+      error.status = 422;
+      throw error;
+    }
+  } else {
+    limit = 5;
+  }
+  if (req.query.page) {
+    let tempPage = parseInt(req.query.page);
+    if (!isNaN(tempPage) && tempPage > 0) {
+      page = tempPage;
+    } else {
+      let error = new Error("Please provide positive integer page");
+      error.status = 422;
+      throw error;
+    }
+  } else {
+    page = 1;
+  }
+
+  let resObj = {};
+  Product.find()
+    .select("-__v -createdAt -updatedAt")
+    .sort({ _id: 'asc' })
+    .limit(limit)
+    .skip((page - 1) * limit)
+    .then(products => {
+      resObj.limit = limit;
+      resObj.page = page;
+      resObj.count = products.length;
+      resObj.products = products;
+      return Product.countDocuments();
+    })
+    .then(count => {
+      resObj.totalProducts = count;
+      res.status(200).json(resObj);
+    })
+    .catch(error => {
+      error.status = 500;
+      return next(error);
+    });
 }

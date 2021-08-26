@@ -1,5 +1,17 @@
 const mongoose = require('mongoose');
 
+const PAGINATION_CONFIG = {
+  DEFAULT_LIMIT: 5,
+  DEFAULT_PAGE: 1
+};
+
+const IMAGE_CONFIG = {
+  SUPPORTED_FORMATS: ["image/png", "image/jpeg"],
+  SUPPORTED_FORMATS_TEXT: [".png", ".jpeg", ".jpg"],
+  MAX_SIZE: 2 * 1024 * 1024,
+  MAX_SIZE_TEXT: "2MB"
+}
+
 const productSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -31,6 +43,5 @@ const productSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 const Product = mongoose.model("Product", productSchema);
-const imageType = ["image/png", "image/jpeg"];
 
-module.exports = { Product, imageType };
+module.exports = { Product, PAGINATION_CONFIG, IMAGE_CONFIG };

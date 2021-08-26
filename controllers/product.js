@@ -1,4 +1,4 @@
-const { Product, imageType } = require("../models/product");
+const { Product, PAGINATION_CONFIG, IMAGE_CONFIG } = require("../models/product");
 const { storage } = require("../firebase");
 const formidable = require("formidable");
 const { v1: uuidv1 } = require('uuid');
@@ -48,25 +48,23 @@ exports.createProduct = (req, res, next) => {
     }
     //handling file
     if (file.productImage) {
-      if (file.productImage.size > (2 * 1024 * 1024)) {
-        let error = new Error("Please upload file of less than 2 MB");
+      if (file.productImage.size > IMAGE_CONFIG.MAX_SIZE) {
+        let error = new Error(`Please upload file of less than ${IMAGE_CONFIG.MAX_SIZE_TEXT}`);
         error.status = 422;
         return next(error);
       }
-      if (!imageType.includes(file.productImage.type)) {
-        let error = new Error("Please upload image of type *.jpeg *.jpg *.png");
+      if (!IMAGE_CONFIG.SUPPORTED_FORMATS.includes(file.productImage.type)) {
+        let error = new Error(`Please upload image of the type ${IMAGE_CONFIG.SUPPORTED_FORMATS_TEXT.join(", ")}`);
         error.status = 422;
         return next(error);
       }
       let newFileName = `${uuidv1()}-${file.productImage.name}`;
+      let firebaseFilePath = `${process.env.FIREBASE_PRODUCT_IMAGES}/${newFileName}`;
       let blobObject = fs.readFileSync(file.productImage.path);
-      const uploadTask = storage.ref(`${process.env.FIREBASE_PRODUCT_IMAGES}/${newFileName}`).put(blobObject, { contentType: file.productImage.type });
-      uploadTask.on(
-        "state_changed",
-        (snapshot) => { },
-        (error) => { return next(error); },
-        () => {
-          //complete function
+      let fileMetaData = { contentType: file.productImage.type };
+      const uploadTask = storage.ref(firebaseFilePath).put(blobObject, fileMetaData);
+      uploadTask
+        .then((snapshot) => {
           uploadTask.snapshot.ref.getDownloadURL()
             .then((url) => {
               let imageObj = { imageUrl: url, imageName: newFileName };
@@ -96,6 +94,10 @@ exports.createProduct = (req, res, next) => {
                   return next(err);
                 });
             });
+        })
+        .catch(err => {
+          err.data = { message: "image upload failed" };
+          return next(err);
         });
     } else {
       let error = new Error("Please provide image");
@@ -115,24 +117,23 @@ exports.updateProduct = (req, res, next) => {
     }
     //handling file
     if (file.productImage) {
-      if (file.productImage.size > (2 * 1024 * 1024)) {
-        let error = new Error("Please upload file of less than 2 MB");
+      if (file.productImage.size > IMAGE_CONFIG.MAX_SIZE) {
+        let error = new Error(`Please upload file of less than ${IMAGE_CONFIG.MAX_SIZE_TEXT}`);
         error.status = 422;
         return next(error);
       }
-      if (!imageType.includes(file.productImage.type)) {
-        let error = new Error("Please upload image of type *.jpeg *.jpg *.png");
+      if (!IMAGE_CONFIG.SUPPORTED_FORMATS.includes(file.productImage.type)) {
+        let error = new Error(`Please upload image of type ${IMAGE_CONFIG.SUPPORTED_FORMATS_TEXT.join(", ")}`);
         error.status = 422;
         return next(error);
       }
       let newFileName = `${uuidv1()}-${file.productImage.name}`;
       let blobObject = fs.readFileSync(file.productImage.path);
-      const uploadTask = storage.ref(`${process.env.FIREBASE_PRODUCT_IMAGES}/${newFileName}`).put(blobObject, { contentType: file.productImage.type });
-      uploadTask.on(
-        "state_changed",
-        (snapshot) => { },
-        (error) => { return next(error); },
-        () => {
+      let firebaseFilePath = `${process.env.FIREBASE_PRODUCT_IMAGES}/${newFileName}`;
+      let fileMetaData = { contentType: file.productImage.type };
+      const uploadTask = storage.ref(firebaseFilePath).put(blobObject, fileMetaData);
+      uploadTask
+        .then((snapshot) => {
           //complete function
           uploadTask.snapshot.ref.getDownloadURL()
             .then(url => {
@@ -164,6 +165,9 @@ exports.updateProduct = (req, res, next) => {
                   return next(err);
                 });
             });
+        })
+        .catch((err) => {
+          return next(err);
         });
     } else {
       Product.findOneAndUpdate({ _id: req.product._id },
@@ -224,7 +228,7 @@ exports.getAllProducts = (req, res, next) => {
       throw error;
     }
   } else {
-    limit = 5;
+    limit = PAGINATION_CONFIG.DEFAULT_LIMIT;
   }
   if (req.query.page) {
     let tempPage = parseInt(req.query.page);
@@ -236,7 +240,7 @@ exports.getAllProducts = (req, res, next) => {
       throw error;
     }
   } else {
-    page = 1;
+    page = PAGINATION_CONFIG.DEFAULT_PAGE;
   }
 
   let resObj = {};

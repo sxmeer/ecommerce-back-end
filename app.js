@@ -12,6 +12,7 @@ const cartRouter = require("./routes/cart");
 const orderRouter = require("./routes/order");
 const productRouter = require("./routes/product");
 const userRouter = require("./routes/user");
+const paymentRouter = require("./routes/payment");
 
 app.use(cors());
 app.use(express.json());
@@ -21,6 +22,7 @@ app.use("/cart", cartRouter);
 app.use("/order", orderRouter);
 app.use("/product", productRouter);
 app.use("/user", userRouter);
+app.use("/payment", paymentRouter);
 
 
 app.use((error, req, res, next) => {

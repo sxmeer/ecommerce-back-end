@@ -1,5 +1,5 @@
 const { Order,
-  PAYMENT_METHOD, PAYMENT_METHOD_VALUES,
+  PAYMENT_METHOD,
   PAYMENT_STATUS, PAYMENT_STATUS_VALUES,
   ORDER_STATUS, ORDER_STATUS_VALUES,
   ORDER_PAGINATION_CONFIG } = require("../models/order");
@@ -18,11 +18,15 @@ exports.createOrder = (req, res, next) => {
         error.status = 400;
         throw error;
       }
-      let orderObj = {};
-      orderObj.products = cart.products;
-      orderObj.address = req.body.address;
-      orderObj.totalPrice = cart.totalPrice;
-      orderObj.user = req.profile._id;
+      let orderObj = {
+        products: cart.products,
+        totalPrice: cart.totalPrice,
+        address: req.body.address,
+        orderStatus: ORDER_STATUS.STATUS_NEW,
+        paymentStatus: PAYMENT_STATUS.STATUS_NOT_PAID,
+        paymentMethod: PAYMENT_METHOD.METHOD_COD,
+        user: req.profile._id
+      };
       let newOrder = new Order(orderObj);
       return newOrder.save();
     })
@@ -32,8 +36,10 @@ exports.createOrder = (req, res, next) => {
         error.status = 400;
         throw error;
       }
-      order = removeUnncessaryFields(order);
-      return res.status(200).json(order);
+      return Cart.findOneAndDelete({ user: req.profile._id })
+    })
+    .then(() => {
+      return res.status(200).json({ status: 'ok' });
     })
     .catch(err => {
       return next(err);

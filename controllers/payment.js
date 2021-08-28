@@ -34,8 +34,25 @@ exports.createOrder = (req, res, next) => {
           error.status = 422;
           throw error;
         }
+        let productsObj = cart.products.map(productWrapper => {
+          return {
+            _id: productWrapper._id,
+            product: {
+              image: {
+                imageUrl: productWrapper.product.image.imageUrl,
+                imageName: productWrapper.product.image.imageName
+              },
+              _id: productWrapper.product._id,
+              name: productWrapper.product.name,
+              description: productWrapper.product.description,
+              price: productWrapper.product.price
+            },
+            count: productWrapper.count,
+            totalPrice: productWrapper.totalPrice
+          };
+        });
         let orderObj = {
-          products: cart.products,
+          products: productsObj,
           transactionId,
           totalPrice: cart.totalPrice,
           address,

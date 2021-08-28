@@ -43,12 +43,12 @@ exports.logIn = (req, res, next) => {
       if (!userDoc) {
         let error = new Error("Invalid email or password");
         error.status = 422;
-        throw err;
+        throw error;
       }
       if (!userDoc.authenticate(password)) {
         let error = new Error("Invalid email or password");
         error.status = 422;
-        throw err;
+        throw error;
       }
       const token = jwt.sign({ id: userDoc._id }, process.env.PASSWORD_SECRET);
       const { name, email, _id, role } = userDoc;
@@ -56,7 +56,7 @@ exports.logIn = (req, res, next) => {
         token, user: { name, email, _id, role }
       });
     }).catch(err => {
-      next(err);
+      return next(err);
     });
 };
 

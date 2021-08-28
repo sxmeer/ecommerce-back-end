@@ -10,7 +10,7 @@ const expressJwt = jwt({
 const isAuthenticated = (req, res, next) => {
   let isAuth = req.profile && req.auth && req.auth.id == req.profile._id;
   if (!isAuth) {
-    let error = new Error("ACCESS DENIED");
+    let error = new Error("NOT AUTHENTICATED");
     error.status = 401;
     throw error;
   }

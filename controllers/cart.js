@@ -5,10 +5,10 @@ exports.addProductToCart = (req, res, next) => {
   let productCount;
   if (req.query.productCount) {
     let temp = parseInt(req.query.productCount);
-    if (!isNan(temp) && temp > 0 && temp <= DELIVERY_CONFIG.PER_PRODUCT_COUNT_PER_ORDER) {
+    if (!isNaN(temp) && temp > 0 && temp <= DELIVERY_CONFIG.PER_PRODUCT_COUNT_PER_ORDER) {
       productCount = temp;
     } else {
-      let error = new Error("Please provide product count between 1 and 10 inclusive");
+      let error = new Error(`Please provide product count between 1 and ${DELIVERY_CONFIG.PER_PRODUCT_COUNT_PER_ORDER} inclusive`);
       error.status = 422;
       throw error;
     }

@@ -18,8 +18,25 @@ exports.createOrder = (req, res, next) => {
         error.status = 400;
         throw error;
       }
+      let productsObj = cart.products.map(productWrapper => {
+        return {
+          _id: productWrapper._id,
+          product: {
+            image: {
+              imageUrl: productWrapper.product.image.imageUrl,
+              imageName: productWrapper.product.image.imageName
+            },
+            _id: productWrapper.product._id,
+            name: productWrapper.product.name,
+            description: productWrapper.product.description,
+            price: productWrapper.product.price
+          },
+          count: productWrapper.count,
+          totalPrice: productWrapper.totalPrice
+        };
+      });
       let orderObj = {
-        products: cart.products,
+        products: productsObj,
         totalPrice: cart.totalPrice,
         address: req.body.address,
         orderStatus: ORDER_STATUS.STATUS_NEW,
@@ -129,10 +146,12 @@ exports.getAllOrders = (req, res, next) => {
     }
   }
   if (req.query.userRole) {
-    if (req.query.userRole === USER_TYPES.TYPE_ADMIN && req.profile.role !== USER_TYPES.TYPE_ADMIN) {
-      let error = new Error("ACCESS NOT GRANTED");
-      error.status = 401;
-      throw error;
+    if (req.query.userRole === USER_TYPES.TYPE_ADMIN) {
+      if (req.profile.role !== USER_TYPES.TYPE_ADMIN) {
+        let error = new Error("ACCESS NOT GRANTED");
+        error.status = 401;
+        throw error;
+      }
     } else {
       searchParams.user = req.profile._id;
     }

@@ -51,9 +51,9 @@ exports.logIn = (req, res, next) => {
         throw error;
       }
       const token = jwt.sign({ id: userDoc._id }, process.env.PASSWORD_SECRET);
-      const { name, email, _id, role } = userDoc;
+      const { firstName, lastName, email, _id, role } = userDoc;
       return res.status(200).json({
-        token, user: { name, email, _id, role }
+        token, user: { firstName, lastName, email, _id, role }
       });
     }).catch(err => {
       return next(err);

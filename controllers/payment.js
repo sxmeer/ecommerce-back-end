@@ -19,8 +19,8 @@ exports.createOrder = (req, res, next) => {
     // legit response
     const paymentEntity = req.body.payload.payment.entity;
     const transactionId = paymentEntity.order_id;
-    const address = paymentEntity.notes.billingAddress;
-    const user = paymentEntity.notes.user_id;
+    const address = paymentEntity.notes.address;
+    const user = paymentEntity.notes.userId;
     if (!transactionId || !address || !user) {
       let error = new Error("incomplete details found");
       error.status = 422;
@@ -88,7 +88,7 @@ exports.createOrder = (req, res, next) => {
 
 
 exports.getOrderDetail = (req, res, next) => {
-  Cart.findOne({ _id: req.profile._id })
+  Cart.findOne({ user: req.profile._id })
     .then(cart => {
       if (!cart) {
         let error = new Error("No items in the cart to be checked out");
@@ -110,7 +110,7 @@ exports.getOrderDetail = (req, res, next) => {
         throw error;
       }
       return res.status(200).json({
-        order_id: razorpayOrder.id,
+        orderId: razorpayOrder.id,
         currency: razorpayOrder.currency,
         amount: razorpayOrder.amount
       });

@@ -84,7 +84,7 @@ exports.editOrder = (req, res, next) => {
         error.status = 422;
         throw error;
       }
-      updatedOrder = removeUnncessaryFields(updatedOrder)
+      // updatedOrder = removeUnncessaryFields(updatedOrder)
       return res.status(200).json(updatedOrder);
     })
     .catch(err => {
@@ -160,7 +160,7 @@ exports.getAllOrders = (req, res, next) => {
   }
   let resObj = {};
   Order.find(searchParams)
-    .select("-__v -createdAt -updatedAt")
+    // .select("-__v -createdAt -updatedAt")
     .sort({ _id: 'asc' })
     .limit(limit)
     .skip((page - 1) * limit)

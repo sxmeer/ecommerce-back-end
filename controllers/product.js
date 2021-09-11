@@ -11,7 +11,6 @@ const deleteProductImageFromFirebase = (fileName) => {
       return true;
     })
     .catch((err) => {
-      console.log(err);
       return true;
     });
 };
